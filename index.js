@@ -4,14 +4,14 @@ const porta = 3000;
 const { open } = require('sqlite');
 const sqlite3 = require('sqlite3');
 
-//app.use(express.json);
+app.use(express.json);
 
 app.listen(porta, () => console.log("Servidor rodando"))
 
 //Testa a rota '/' da API para atestar sucesso
-app.get('/', (req, res) => {
+/*app.get('/', (req, res) => {
   res.send("Servidor rodando com sucesso!");
-});
+});*/
 
 //Cria na pasta raiz o documento do banco de dados, sua conexao e as tabelas necessarias
 let database;
@@ -26,13 +26,13 @@ let database;
         CREATE TABLE IF NOT EXISTS Orders(
             orderId TEXT PRIMARY KEY,
             value REAL,
-            criationDate TEXT
+            creationDate TEXT
         )
     `);
     await database.exec(`
         CREATE TABLE IF NOT EXISTS Items(
             productId INTEGER PRIMARY KEY,
-            orderId TEXT, 
+            orderId TEXT,
             quantity INTEGER,
             price REAL,
             FOREIGN KEY (orderId) REFERENCES Orders(orderId)
@@ -40,3 +40,20 @@ let database;
     `);
     console.log("Banco de dados pronto!");
 })();
+
+app.post('/order', async (req, res) => {
+    const {numeroPedido, valorTotal, dataCriacao, items} = req.body;
+
+    try {
+        await database.run('INSERT INTO Orders (orderId, value, creationDate) VALUES (?, ?, ?)', 
+            [numeroPedido, valorTotal, dataCriacao]);
+
+        for (const item of items) {
+            await database.run('INSERT INTO Items (productId, orderId, quantity, price) VALUES (?, ?, ?, ?)',
+                [item.idItem, numeroPedido, item.quantidadeItem, item.valorItem]);
+        }
+        res.status(201).json({ message: "Pedido criado com sucesso!" });
+    } catch (err) {
+        res.status(400).json({ error: "Erro ao criar pedido. Verifique se o numeroPedido já existe." });
+    }
+});
