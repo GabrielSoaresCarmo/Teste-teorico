@@ -23,18 +23,19 @@ let database;
 
     //Cria as tabelas se elas não existirem
     await database.exec(`
-        CREATE TABLE IF NOT EXISTS Order(
+        CREATE TABLE IF NOT EXISTS Orders(
             orderId TEXT PRIMARY KEY,
             value REAL,
             criationDate TEXT
         )
-
+    `);
+    await database.exec(`
         CREATE TABLE IF NOT EXISTS Items(
             productId INTEGER PRIMARY KEY,
             orderId TEXT, 
             quantity INTEGER,
             price REAL,
-            FOREIGN KEY (orderId) REFERENCES Order(orderId)
+            FOREIGN KEY (orderId) REFERENCES Orders(orderId)
         )
     `);
     console.log("Banco de dados pronto!");
